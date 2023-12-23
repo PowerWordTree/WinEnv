@@ -1,54 +1,53 @@
 ::环境变量管理
 ::@author FB
-::@version 0.1.0
+::@version 0.2.0
 
 ::Script:Config.ArgParser.CMD::
 ::Script:Config.FileRead.CMD::
 ::Script:Config.FileWrite.CMD::
+::Script:Environment.Get.CMD::
+::Script:Environment.Set.CMD::
+::Script:File.GetPath.CMD::
 ::Script:Object.Destroy.CMD::
 ::Script:Object.ListAll.CMD::
-::Script:Registry.Query.CMD::
-::Script:Registry.Add.CMD::
-::Script:Registry.Delete.CMD::
-::Script:Powershell.Replace.CMD::
+::Script:String.Replace.CMD::
 
 ::初始化环境
 @ECHO OFF
 SETLOCAL
-CD /D "%~dp0"
-SET "PATH=%CD%\Bin;%CD%\Script;%PATH%"
-SET "EXIT_CODE=0"
-CALL Object.Destroy.CMD "ARG"
-CALL Object.Destroy.CMD "CONFIG"
-CALL Object.Destroy.CMD "CONFIG_OLD"
+SET "PATH=%~dp0Bin;%~dp0Script;%PATH%"
+SET "_EXIT_CODE=0"
 ::解析参数
-CALL Config.ArgParser.CMD "ARG" %*
-IF "%ARG.OPTION.O%" == "1" (
+CALL Object.Destroy.CMD "_ARG"
+CALL Config.ArgParser.CMD "_ARG" %*
+IF "%_ARG.OPTION.O%" == "1" (
   SET "OPTION=/D 1 /T 0"
-) ELSE IF "%ARG.OPTION.O%" == "2" (
+) ELSE IF "%_ARG.OPTION.O%" == "2" (
   SET "OPTION=/D 2 /T 0"
-) ELSE IF "%ARG.OPTION.O%" == "3" (
+) ELSE IF "%_ARG.OPTION.O%" == "3" (
   SET "OPTION=/D 3 /T 0"
 ) ELSE (
   SET "OPTION="
 )
-IF "%ARG.PARAM.0%" == "" (
-  SET "CONFIG=%~n0.ini"
-  SET "CONFIG_OLD=%~n0.old"
-) ELSE IF /I "%ARG.PARAM.0:~-4%" == ".ini" (
-  SET "CONFIG=%ARG.PARAM.0%"
-  SET "CONFIG_OLD=%ARG.PARAM.0:~,-4%.old"
+IF "%_ARG.PARAM.0%" == "" (
+  SET "_CONFIG=%~n0.ini"
+  SET "_CONFIG_OLD=%~n0.old"
+) ELSE IF /I "%_ARG.PARAM.0:~-4%" == ".ini" (
+  SET "_CONFIG=%_ARG.PARAM.0%"
+  SET "_CONFIG_OLD=%_ARG.PARAM.0:~,-4%.old"
 ) ELSE (
-  SET "CONFIG=%ARG.PARAM.0%.ini"
-  SET "CONFIG_OLD=%ARG.PARAM.0%.old"
+  SET "_CONFIG=%_ARG.PARAM.0%.ini"
+  SET "_CONFIG_OLD=%_ARG.PARAM.0%.old"
 )
+CALL File.GetPath.CMD "%%_CONFIG%%"
+CD /D "%@%"
 ::输出标题
 ECHO.
 ECHO ============================================
 ECHO =======         环境变量管理          ======
 ECHO ============================================
 ::输出帮助
-IF /I "%ARG.OPTION.H%" == "TRUE" (
+IF /I "%_ARG.OPTION.H%" == "TRUE" (
   ECHO.
   ECHO 命令行: %~nx0 [配置文件[.ini]] [/o^|-o ^<1^|2^|3^>] [/h^|-h]
   ECHO.
@@ -84,96 +83,83 @@ GOTO :OP_%ERRORLEVEL%
 :OP_1
 ::读取配置文件
 ECHO.
-ECHO 配置文件: %CONFIG%
-IF NOT EXIST "%CONFIG%" (
+ECHO 配置文件: %_CONFIG%
+IF NOT EXIST "%_CONFIG%" (
   ECHO.
   ECHO.***** 错误, 配置文件不存在！*****
-  SET "EXIT_CODE=404"
+  SET "_EXIT_CODE=404"
   GOTO :EXIT
 )
-CALL Config.FileRead.CMD "CONFIG" "%CONFIG%"
-FOR /F "usebackq delims=" %%A IN (`SET "CONFIG." 2^>NUL`) DO (CALL SET "%%~A")
-::注册表路径
-IF /I "%CONFIG.SCOPE%" == "MACHINE" (
-  SET "_REG_PATH=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
-) ELSE (
-  SET "_REG_PATH=HKEY_CURRENT_USER\Environment"
-)
+CALL Object.Destroy.CMD "_CONFIG"
+CALL Config.FileRead.CMD "_CONFIG" "%_CONFIG%"
+FOR /F "usebackq delims=" %%A IN (`SET "_CONFIG." 2^>NUL`) DO (CALL SET "%%~A")
 ::备份环境变量
-SET "CONFIG_OLD.SCOPE=%CONFIG.SCOPE%"
+CALL Object.Destroy.CMD "_CONFIG_OLD"
+SET "_CONFIG_OLD.SCOPE=%_CONFIG.SCOPE%"
 FOR %%A IN ("REPLACE","APPEND","INSERT") DO (
   FOR /F "usebackq delims=" %%I IN (
-    `CALL Object.ListAll.CMD "CONFIG.%%~A" "{0}"`
+    `CALL Object.ListAll.CMD "_CONFIG.%%~A" "{0}"`
   ) DO (
     SET "_KEY=%%~I"
-    CALL Registry.Query.CMD "%%_REG_PATH%%" "%%_KEY%%" || SET "@=(Removed)"
-    CALL SET "CONFIG_OLD.REPLACE.%%_KEY%%=%%@%%"
+    CALL Environment.Get.CMD "%%_KEY%%" "%%_CONFIG.SCOPE%%" || SET "@=(Removed)"
+    CALL SET "_CONFIG_OLD.REPLACE.%%_KEY%%=%%@%%"
   )
 )
-FOR /F "usebackq delims=" %%A IN (`SET "CONFIG_OLD." 2^>NUL`) DO (
-  SET "_STR=%%~A" & CALL Powershell.Replace.CMD _STR "%%%%" "%%%%%%%%"
+FOR /F "usebackq delims=" %%A IN (`SET "_CONFIG_OLD." 2^>NUL`) DO (
+  SET "_STR=%%~A" & CALL String.Replace.CMD "%%_STR%%" "%%%%" "%%%%%%%%"
   CALL SET "%%@%%"
 )
-CALL Config.FileWrite.CMD "CONFIG_OLD" "%CONFIG_OLD%"
+CALL Config.FileWrite.CMD "_CONFIG_OLD" "%_CONFIG_OLD%"
 ::设置环境变量
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
-  `CALL Object.ListAll.CMD "CONFIG.REPLACE" "{0}={1}"`
+  `CALL Object.ListAll.CMD "_CONFIG.REPLACE" "{0}={1}"`
 ) DO (
   SET "_KEY=%%~A" & SET "_VALUE=%%~B"
   CALL ECHO %%_KEY%%=%%_VALUE%%
-  IF /I "%%~B" == "(Removed)" (
-    CALL Registry.Delete.CMD "%%_REG_PATH%%" "%%_KEY%%"
-  ) ELSE (
-    CALL Registry.Add.CMD "%%_REG_PATH%%" "%%_KEY%%" "REG_EXPAND_SZ" "%%_VALUE%%"
-  )
+  IF /I "%%~B" == "(Removed)" SET "_VALUE="
+  CALL Environment.Set.CMD "%%_KEY%%" "%%_VALUE%%" "%%_CONFIG.SCOPE%%"
 )
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
-  `CALL Object.ListAll.CMD "CONFIG.APPEND" "{0}={1}"`
+  `CALL Object.ListAll.CMD "_CONFIG.APPEND" "{0}={1}"`
 ) DO (
   SET "_KEY=%%~A" & SET "_VALUE=%%~B"
-  CALL Registry.Query.CMD "%_REG_PATH%" "%%_KEY%%"
-  CALL ECHO %%_KEY%%=%%@%%%%_VALUE%%
-  CALL Registry.Add.CMD "%_REG_PATH%" "%%_KEY%%" "REG_EXPAND_SZ" "%%@%%%%_VALUE%%"
+  CALL Environment.Get.CMD "%%_KEY%%" "%%_CONFIG.SCOPE%%"
+  SET "_VALUE=%%@%%%%_VALUE%%"
+  CALL ECHO %%_KEY%%=%%_VALUE%%
+  CALL Environment.Set.CMD "%%_KEY%%" "%%_VALUE%%" "%%_CONFIG.SCOPE%%"
 )
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
-  `CALL Object.ListAll.CMD "CONFIG.INSERT" "{0}={1}"`
+  `CALL Object.ListAll.CMD "_CONFIG.INSERT" "{0}={1}"`
 ) DO (
   SET "_KEY=%%~A" & SET "_VALUE=%%~B"
-  CALL Registry.Query.CMD "%_REG_PATH%" "%%_KEY%%"
-  CALL ECHO %%_KEY%%=%%_VALUE%%%%@%%
-  CALL Registry.Add.CMD "%_REG_PATH%" "%%_KEY%%" "REG_EXPAND_SZ" "%%_VALUE%%%%@%%"
+  CALL Environment.Get.CMD "%%_KEY%%" "%%_CONFIG.SCOPE%%"
+  SET "_VALUE=%%_VALUE%%%%@%%"
+  CALL ECHO %%_KEY%%=%%_VALUE%%
+  CALL Environment.Set.CMD "%%_KEY%%" "%%_VALUE%%" "%%_CONFIG.SCOPE%%"
 )
 GOTO :EXIT
 
 :OP_2
 ::读取备份
 ECHO.
-ECHO 备份文件: %CONFIG_OLD%
-IF NOT EXIST "%CONFIG_OLD%" (
+ECHO 备份文件: %_CONFIG_OLD%
+IF NOT EXIST "%_CONFIG_OLD%" (
   ECHO.
   ECHO.***** 错误, 配置文件不存在！*****
-  SET "EXIT_CODE=404"
+  SET "_EXIT_CODE=404"
   GOTO :EXIT
 )
-CALL Config.FileRead.CMD "CONFIG_OLD" "%CONFIG_OLD%"
-FOR /F "usebackq delims=" %%A IN (`SET "CONFIG_OLD." 2^>NUL`) DO (CALL SET "%%~A")
-::注册表路径
-IF /I "%CONFIG.SCOPE%" == "MACHINE" (
-  SET "_REG_PATH=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
-) ELSE (
-  SET "_REG_PATH=HKEY_CURRENT_USER\Environment"
-)
+CALL Object.Destroy.CMD "_CONFIG_OLD"
+CALL Config.FileRead.CMD "_CONFIG_OLD" "%_CONFIG_OLD%"
+FOR /F "usebackq delims=" %%A IN (`SET "_CONFIG_OLD." 2^>NUL`) DO (CALL SET "%%~A")
 ::设置环境
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
-  `CALL Object.ListAll.CMD "CONFIG_OLD.REPLACE" "{0}={1}"`
+  `CALL Object.ListAll.CMD "_CONFIG_OLD.REPLACE" "{0}={1}"`
 ) DO (
   SET "_KEY=%%~A" & SET "_VALUE=%%~B"
   CALL ECHO %%_KEY%%=%%_VALUE%%
-  IF /I "%%~B" == "(Removed)" (
-    CALL Registry.Delete.CMD "%%_REG_PATH%%" "%%_KEY%%"
-  ) ELSE (
-    CALL Registry.Add.CMD "%%_REG_PATH%%" "%%_KEY%%" "REG_EXPAND_SZ" "%%_VALUE%%"
-  )
+  IF /I "%%~B" == "(Removed)" SET "_VALUE="
+  CALL Environment.Set.CMD "%%_KEY%%" "%%_VALUE%%" "%%_CONFIG_OLD.SCOPE%%"
 )
 GOTO :EXIT
 
@@ -185,4 +171,4 @@ IF "%OPTION%" == "" (
   ECHO 按任意键结束……
   PAUSE >NUL
 )
-ENDLOCAL & EXIT /B %EXIT_CODE%
+ENDLOCAL & EXIT /B %_EXIT_CODE%

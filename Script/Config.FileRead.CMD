@@ -21,8 +21,7 @@ SET "@VAR=%~1" & SET "@SECTION=."
 FOR /F "eol=# tokens=1,* usebackq delims==" %%A IN (
   `TYPE "%~2" 2^>NUL`
 ) DO (
-  SET "@KEY=%%~A"
-  SET "@VALUE=%%~B"
+  SET "@KEY=%%~A" & SET "@VALUE=%%~B"
   CALL String.Trim.CMD "%%@KEY%%" & CALL SET "@KEY=%%@%%"
   CALL String.Trim.CMD "%%@VALUE%%" & CALL SET "@VALUE=%%@%%"
   CALL :_PARSE_LINE

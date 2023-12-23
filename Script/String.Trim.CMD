@@ -1,26 +1,19 @@
 ::@author FB
-::@version 0.2.0
+::@version 0.2.1
 
 ::使用(SET "@=%*")也可以达到同样目的
 ::但存在无法使用双引号包裹参数问题, 遇到特殊符号会产生歧义
-
-::已知问题: 无法处理TAB符号
 
 ::去首尾空格
 ::  参数1: 目标字符串
 ::  返回@: 处理后的字符串
 
+::Script:String.TrimStart.CMD::
+::Script:String.TrimEnd.CMD::
+
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 SET "@=%~1"
-:_TRIM_START
-IF NOT "%@%" == "" IF "%@:~,1%" == " " (
-  SET "@=%@:~1%"
-  GOTO :_TRIM_START
-)
-:_TRIM_END
-IF NOT "%@%" == "" IF "%@:~-1%" == " " (
-  SET "@=%@:~,-1%"
-  GOTO :_TRIM_END
-)
+CALL String.TrimStart.CMD "%%@%%"
+CALL String.TrimEnd.CMD "%%@%%"
 EXIT /B
