@@ -124,7 +124,7 @@ FOR /F "tokens=1,* usebackq delims==" %%A IN (
 ) DO (
   SET "_KEY=%%~A" & SET "_VALUE=%%~B"
   CALL Environment.Get.CMD "%%_KEY%%" "%%_CONFIG.SCOPE%%"
-  SET "_VALUE=%%@%%%%_VALUE%%"
+  CALL SET "_VALUE=%%@%%%%_VALUE%%"
   CALL ECHO %%_KEY%%=%%_VALUE%%
   CALL Environment.Set.CMD "%%_KEY%%" "%%_VALUE%%" "%%_CONFIG.SCOPE%%"
 )
@@ -133,7 +133,7 @@ FOR /F "tokens=1,* usebackq delims==" %%A IN (
 ) DO (
   SET "_KEY=%%~A" & SET "_VALUE=%%~B"
   CALL Environment.Get.CMD "%%_KEY%%" "%%_CONFIG.SCOPE%%"
-  SET "_VALUE=%%_VALUE%%%%@%%"
+  CALL SET "_VALUE=%%_VALUE%%%%@%%"
   CALL ECHO %%_KEY%%=%%_VALUE%%
   CALL Environment.Set.CMD "%%_KEY%%" "%%_VALUE%%" "%%_CONFIG.SCOPE%%"
 )
