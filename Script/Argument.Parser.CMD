@@ -1,5 +1,5 @@
 ::@author FB
-::@version 0.1.0
+::@version 0.2.0
 
 ::有序参数: 实例.PARAM, 保存为Array
 ::选项参数: 实例.OPTION, 保存为Map
@@ -12,19 +12,19 @@
 ::  参数1: 实例名称
 ::  参数N: 参数
 
-::Script:Array.Clear.CMD::
+::Script:Array.New.CMD::
 ::Script:Array.Push.CMD::
-::Script:Map.Clear.CMD::
+::Script:Map.New.CMD::
 ::Script:Map.Put.CMD::
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 SET "@VAR=%~1"
-CALL Array.Clear.CMD "%@VAR%.PARAM"
-CALL Map.Clear.CMD "%@VAR%.OPTION"
+CALL Array.New.CMD "%@VAR%.PARAM"
+CALL Map.New.CMD "%@VAR%.OPTION"
 :_ARG_PARSE_LOOP
 SHIFT
-IF "%1" == "" (SET "@=" & SET "@VAR=" & EXIT /B)
+IF "%1" == "" (SET "@VAR=" & EXIT /B)
 SET "@=%~1"
 ECHO.%@% | FINDSTR "^[-/]" 1>NUL 2>&1 && (
   ECHO.%~2 | FINDSTR /R /C:"^[-/]" /C:"^[ ]*$" 1>NUL 2>&1 && (

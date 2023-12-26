@@ -1,15 +1,17 @@
 ::环境变量管理
 ::@author FB
-::@version 0.2.0
+::@version 0.2.3
 
-::Script:Config.ArgParser.CMD::
+::Script:Argument.Parser.CMD::
 ::Script:Config.FileRead.CMD::
 ::Script:Config.FileWrite.CMD::
 ::Script:Environment.Get.CMD::
 ::Script:Environment.Set.CMD::
 ::Script:File.GetPath.CMD::
-::Script:Object.Destroy.CMD::
-::Script:Object.ListAll.CMD::
+::Script:Map.New.CMD::
+::Script:Map.NewChild.CMD::
+::Script:Map.List.CMD::
+::Script:Map.Put.CMD::
 ::Script:String.Replace.CMD::
 
 ::初始化环境
@@ -18,8 +20,7 @@ SETLOCAL
 SET "PATH=%~dp0Bin;%~dp0Script;%PATH%"
 SET "_EXIT_CODE=0"
 ::解析参数
-CALL Object.Destroy.CMD "_ARG"
-CALL Config.ArgParser.CMD "_ARG" %*
+CALL Argument.Parser.CMD "_ARG" %*
 IF "%_ARG.OPTION.O%" == "1" (
   SET "OPTION=/D 1 /T 0"
 ) ELSE IF "%_ARG.OPTION.O%" == "2" (
@@ -90,29 +91,29 @@ IF NOT EXIST "%_CONFIG%" (
   SET "_EXIT_CODE=404"
   GOTO :EXIT
 )
-CALL Object.Destroy.CMD "_CONFIG"
-CALL Config.FileRead.CMD "_CONFIG" "%_CONFIG%"
+CALL Config.FileRead.CMD "_CONFIG" "%%_CONFIG%%"
 FOR /F "usebackq delims=" %%A IN (`SET "_CONFIG." 2^>NUL`) DO (CALL SET "%%~A")
 ::备份环境变量
-CALL Object.Destroy.CMD "_CONFIG_OLD"
-SET "_CONFIG_OLD.SCOPE=%_CONFIG.SCOPE%"
+CALL Map.New.CMD "_CONFIG_OLD"
+CALL Map.Put.CMD "_CONFIG_OLD" "SCOPE" "%%_CONFIG.SCOPE%%"
+CALL Map.NewChild.CMD "_CONFIG_OLD" "REPLACE"
 FOR %%A IN ("REPLACE","APPEND","INSERT") DO (
   FOR /F "usebackq delims=" %%I IN (
-    `CALL Object.ListAll.CMD "_CONFIG.%%~A" "{0}"`
+    `CALL Map.List.CMD "_CONFIG.%%~A" "{0}"`
   ) DO (
     SET "_KEY=%%~I"
     CALL Environment.Get.CMD "%%_KEY%%" "%%_CONFIG.SCOPE%%" || SET "@=(Removed)"
-    CALL SET "_CONFIG_OLD.REPLACE.%%_KEY%%=%%@%%"
+    CALL Map.Put.CMD "_CONFIG_OLD.REPLACE" "%%_KEY%%" "%%@%%"
   )
 )
 FOR /F "usebackq delims=" %%A IN (`SET "_CONFIG_OLD." 2^>NUL`) DO (
   SET "_STR=%%~A" & CALL String.Replace.CMD "%%_STR%%" "%%%%" "%%%%%%%%"
   CALL SET "%%@%%"
 )
-CALL Config.FileWrite.CMD "_CONFIG_OLD" "%_CONFIG_OLD%"
+CALL Config.FileWrite.CMD "_CONFIG_OLD" "%%_CONFIG_OLD%%"
 ::设置环境变量
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
-  `CALL Object.ListAll.CMD "_CONFIG.REPLACE" "{0}={1}"`
+  `CALL Map.List.CMD "_CONFIG.REPLACE" "{0}={1}"`
 ) DO (
   SET "_KEY=%%~A" & SET "_VALUE=%%~B"
   CALL ECHO %%_KEY%%=%%_VALUE%%
@@ -120,7 +121,7 @@ FOR /F "tokens=1,* usebackq delims==" %%A IN (
   CALL Environment.Set.CMD "%%_KEY%%" "%%_VALUE%%" "%%_CONFIG.SCOPE%%"
 )
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
-  `CALL Object.ListAll.CMD "_CONFIG.APPEND" "{0}={1}"`
+  `CALL Map.List.CMD "_CONFIG.APPEND" "{0}={1}"`
 ) DO (
   SET "_KEY=%%~A" & SET "_VALUE=%%~B"
   CALL Environment.Get.CMD "%%_KEY%%" "%%_CONFIG.SCOPE%%"
@@ -129,7 +130,7 @@ FOR /F "tokens=1,* usebackq delims==" %%A IN (
   CALL Environment.Set.CMD "%%_KEY%%" "%%_VALUE%%" "%%_CONFIG.SCOPE%%"
 )
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
-  `CALL Object.ListAll.CMD "_CONFIG.INSERT" "{0}={1}"`
+  `CALL Map.List.CMD "_CONFIG.INSERT" "{0}={1}"`
 ) DO (
   SET "_KEY=%%~A" & SET "_VALUE=%%~B"
   CALL Environment.Get.CMD "%%_KEY%%" "%%_CONFIG.SCOPE%%"
@@ -140,7 +141,7 @@ FOR /F "tokens=1,* usebackq delims==" %%A IN (
 GOTO :EXIT
 
 :OP_2
-::读取备份
+::读取备份文件
 ECHO.
 ECHO 备份文件: %_CONFIG_OLD%
 IF NOT EXIST "%_CONFIG_OLD%" (
@@ -149,12 +150,11 @@ IF NOT EXIST "%_CONFIG_OLD%" (
   SET "_EXIT_CODE=404"
   GOTO :EXIT
 )
-CALL Object.Destroy.CMD "_CONFIG_OLD"
-CALL Config.FileRead.CMD "_CONFIG_OLD" "%_CONFIG_OLD%"
+CALL Config.FileRead.CMD "_CONFIG_OLD" "%%_CONFIG_OLD%%"
 FOR /F "usebackq delims=" %%A IN (`SET "_CONFIG_OLD." 2^>NUL`) DO (CALL SET "%%~A")
-::设置环境
+::恢复环境变量
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
-  `CALL Object.ListAll.CMD "_CONFIG_OLD.REPLACE" "{0}={1}"`
+  `CALL Map.List.CMD "_CONFIG_OLD.REPLACE" "{0}={1}"`
 ) DO (
   SET "_KEY=%%~A" & SET "_VALUE=%%~B"
   CALL ECHO %%_KEY%%=%%_VALUE%%

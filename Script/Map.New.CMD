@@ -1,8 +1,9 @@
 ::@author FB
-::@version 0.1.0
+::@version 0.2.0
 
 ::数据组织: A.XX=* A.YY=* A.ZZ=*
-::数据列表: %A.@MAP%
+::元素列表: A.@LIST A.B.@LIST A.C.@LIST
+::子项列表: A.@CHILD A.B.@CHILD A.C.@CHILD
 ::数据创建: CALL Map_New.CMD A;
 ::数据添加: CALL Map_Push.CMD A XX "*";
 ::数据访问: CALL Map_Get.CMD A XX; CALL :ARRAY_REMOVE A YY;
@@ -12,7 +13,11 @@
 ::创建
 ::  参数1: 实例名称
 
+::Script:Map.Destroy.CMD::
+
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-SET "%~1.@MAP=;"
+CALL Map.Destroy.CMD "%~1"
+SET "%~1.@LIST=;"
+SET "%~1.@CHILD=;"
 EXIT /B

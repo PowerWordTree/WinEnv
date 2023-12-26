@@ -1,9 +1,9 @@
 ::@author FB
 ::@version 0.1.0
 
-::Powershell设置环境变量获取
+::设置环境变量获取
 ::  参数1: 环境变量名
-::  参数2: 作用域(MACHINE/USER/PROCESS)
+::  参数2: 作用域(MACHINE/USER)
 ::  返回@: 环境变量值
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -12,7 +12,7 @@
 SETLOCAL
 SET "@NAME=%~1" & SET "@TARGET=%~2" & SET "@="
 FOR /F "usebackq delims=" %%A IN (
-  `Powershell.EXE -Command "& { $ErrorActionPreference='Ignore'; [Environment]::GetEnvironmentVariable(${Env:@NAME},${Env:@TARGET}) }"`
+  `Powershell.EXE -Command "& { [Environment]::GetEnvironmentVariable(${Env:@NAME},${Env:@TARGET}) }"`
 ) DO (
   SET "@=%%~A"
 )
