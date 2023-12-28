@@ -1,21 +1,22 @@
 ::@author FB
 ::@version 0.1.0
 
-::设置环境变量获取
-::  参数1: 环境变量名
-::  参数2: 作用域(MACHINE/USER)
+::获取环境变量
+::  参数1: 作用域(MACHINE/USER)
+::  参数2: 环境变量名
 ::  返回@: 环境变量值
+::  错误码: 0,有值; 1,空值;
+
+::Script:Registry.Query.CMD::
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-@ECHO OFF
 SETLOCAL
-SET "@NAME=%~1" & SET "@TARGET=%~2" & SET "@="
-FOR /F "usebackq delims=" %%A IN (
-  `Powershell.EXE -Command "& { [Environment]::GetEnvironmentVariable(${Env:@NAME},${Env:@TARGET}) }"`
-) DO (
-  SET "@=%%~A"
+SET "@NAME=%~2"
+IF "%~1" == "MACHINE" (
+  SET "@PATH=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+) ELSE (
+  SET "@PATH=HKEY_CURRENT_USER\Environment"
 )
-ENDLOCAL & SET "@=%@%"
-IF "%@%" == "" EXIT /B 1
-EXIT /B 0
+CALL Registry.Query.CMD "%%@PATH%%" "%%@NAME%%"
+ENDLOCAL & SET "@=%@%" & EXIT /B %ERRORLEVEL%

@@ -1,5 +1,15 @@
 # 更新历史
 
+## 0.3.1 / 2023-12-29
+
+- 切换回 REG.EXE 方式设置环境变量.
+
+  PowerShell 的设置环境变量方式存在问题, [Environment]::GetEnvironmentVariable 无法控制变量展开, [Environment]::SetEnvironmentVariable 无法控制 REG_SZ 和 REG_EXPAND_SZ 类型.
+
+- 排除冲突的变量名.
+
+  变量名`PATH`和`_*`和`@*`, 可以设置环境变量, 但后续不可作为变量使用.
+
 ## 0.3.0 / 2023-12-28
 
 - 支持执行顺序, 环境变量名后续可以作为变量使用.

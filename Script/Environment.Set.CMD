@@ -2,15 +2,29 @@
 ::@version 0.1.0
 
 ::设置环境变量
-::  参数1: 环境变量名
-::  参数2: 环境变量值
-::  参数3: 作用域(MACHINE/USER)
+::  参数1: 作用域(MACHINE/USER)
+::  参数2: 环境变量名
+::  参数3: 环境变量值(空为删除)
+
+::Script:Common.Expand.CMD::
+::Script:Registry.Add.CMD::
+::Script:Registry.Delete.CMD::
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-@ECHO OFF
 SETLOCAL
-SET "@NAME=%~1" & SET "@VALUE=%~2" & SET "@TARGET=%~3"
-Powershell.EXE -Command "& { [Environment]::SetEnvironmentVariable(${Env:@NAME},${Env:@VALUE},${Env:@TARGET}); Exit -Not $? }"
-ENDLOCAL
-EXIT /B
+SET "@NAME=%~2" & SET "@VALUE=%~3"
+IF "%~1" == "MACHINE" (
+  SET "@PATH=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+) ELSE (
+  SET "@PATH=HKEY_CURRENT_USER\Environment"
+)
+CALL Common.Expand.CMD "%%@VALUE%%"
+IF "%@VALUE%" == "" (
+  CALL Registry.Delete.CMD "%%@PATH%%" "%%@NAME%%"
+) ELSE IF "%@VALUE%" == "%@%" (
+  CALL Registry.Add.CMD "%%@PATH%%" "%%@NAME%%" "REG_SZ" "%%@VALUE%%"
+) ELSE (
+  CALL Registry.Add.CMD "%%@PATH%%" "%%@NAME%%" "REG_EXPAND_SZ" "%%@VALUE%%"
+)
+ENDLOCAL & EXIT /B %ERRORLEVEL%

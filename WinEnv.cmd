@@ -1,6 +1,6 @@
 ::环境变量管理
 ::@author FB
-::@version 0.3.0
+::@version 0.3.1
 
 ::Script:Argument.Parser.CMD::
 ::Script:Config.FileRead.CMD::
@@ -94,14 +94,16 @@ IF NOT EXIST "%_CONFIG%" (
 CALL Config.FileRead.CMD "_CONFIG" "%%_CONFIG%%"
 ::备份环境变量
 CALL Map.New.CMD "_CONFIG_OLD"
+::::展开变量
 CALL Map.Put.CMD "_CONFIG_OLD" "SCOPE" "%_CONFIG.SCOPE%"
 CALL Map.NewChild.CMD "_CONFIG_OLD" "REPLACE"
 FOR %%A IN ("REPLACE","INSERT","APPEND") DO (
   FOR /F "usebackq delims=" %%I IN (
     `CALL Map.List.CMD "_CONFIG.%%~A" "{0}"`
   ) DO (
+    ::::展开变量
     CALL SET "_KEY=%%~I"
-    CALL Environment.Get.CMD "%%_KEY%%" "%%_CONFIG.SCOPE%%" || SET "@=(Removed)"
+    CALL Environment.Get.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" || SET "@=(Removed)"
     CALL String.Replace.CMD "%%@%%" "%%%%" "%%%%%%%%"
     CALL Map.Put.CMD "_CONFIG_OLD.REPLACE" "%%_KEY%%" "%%@%%"
   )
@@ -111,31 +113,34 @@ CALL Config.FileWrite.CMD "_CONFIG_OLD" "%%_CONFIG_OLD%%"
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
   `CALL Map.List.CMD "_CONFIG.REPLACE" "{0}={1}"`
 ) DO (
-  CALL SET "%%~A=%%~B"
+  ::::展开变量
+  CALL :SETENV "%%~A" "%%~B"
   CALL SET "_KEY=%%~A" & CALL SET "_VALUE=%%~B"
   CALL ECHO %%_KEY%%=%%_VALUE%%
   IF /I "%%~B" == "(Removed)" SET "_VALUE="
-  CALL Environment.Set.CMD "%%_KEY%%" "%%_VALUE%%" "%%_CONFIG.SCOPE%%"
+  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
 )
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
   `CALL Map.List.CMD "_CONFIG.INSERT" "{0}={1}"`
 ) DO (
-  CALL SET "%%~A=%%~B%%%%~A%%"
+  ::::展开变量
+  CALL :SETENV "%%~A" "%%~B%%%%~A%%"
   CALL SET "_KEY=%%~A" & CALL SET "_VALUE=%%~B"
-  CALL Environment.Get.CMD "%%_KEY%%" "%%_CONFIG.SCOPE%%"
+  CALL Environment.Get.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%"
   CALL SET "_VALUE=%%_VALUE%%%%@%%"
   CALL ECHO %%_KEY%%=%%_VALUE%%
-  CALL Environment.Set.CMD "%%_KEY%%" "%%_VALUE%%" "%%_CONFIG.SCOPE%%"
+  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
 )
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
   `CALL Map.List.CMD "_CONFIG.APPEND" "{0}={1}"`
 ) DO (
-  CALL SET "%%~A=%%%%~A%%%%~B"
+  ::::展开变量
+  CALL :SETENV "%%~A" "%%%%~A%%%%~B"
   CALL SET "_KEY=%%~A" & CALL SET "_VALUE=%%~B"
-  CALL Environment.Get.CMD "%%_KEY%%" "%%_CONFIG.SCOPE%%"
+  CALL Environment.Get.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%"
   CALL SET "_VALUE=%%@%%%%_VALUE%%"
   CALL ECHO %%_KEY%%=%%_VALUE%%
-  CALL Environment.Set.CMD "%%_KEY%%" "%%_VALUE%%" "%%_CONFIG.SCOPE%%"
+  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
 )
 GOTO :EXIT
 
@@ -150,16 +155,16 @@ IF NOT EXIST "%_CONFIG_OLD%" (
   GOTO :EXIT
 )
 CALL Config.FileRead.CMD "_CONFIG_OLD" "%%_CONFIG_OLD%%"
-FOR /F "usebackq delims=" %%A IN (`SET "_CONFIG_OLD." 2^>NUL`) DO (CALL SET "%%~A")
 ::恢复环境变量
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
   `CALL Map.List.CMD "_CONFIG_OLD.REPLACE" "{0}={1}"`
 ) DO (
-  CALL SET "%%~A=%%~B"
+  ::展开变量
+  CALL :SETENV "%%~A" "%%~B"
   CALL SET "_KEY=%%~A" & CALL SET "_VALUE=%%~B"
   CALL ECHO %%_KEY%%=%%_VALUE%%
   IF /I "%%~B" == "(Removed)" SET "_VALUE="
-  CALL Environment.Set.CMD "%%_KEY%%" "%%_VALUE%%" "%%_CONFIG_OLD.SCOPE%%"
+  CALL Environment.Set.CMD "%%_CONFIG_OLD.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
 )
 GOTO :EXIT
 
@@ -172,3 +177,12 @@ IF "%_OPTION%" == "" (
   PAUSE >NUL
 )
 ENDLOCAL & EXIT /B %_EXIT_CODE%
+
+:SETENV
+SET "_KEY=%~1"
+IF "%_KEY%" == "" GOTO :EOF
+IF /I "%_KEY%" == "PATH" GOTO :EOF
+IF "%_KEY:~,1%" == "_" GOTO :EOF
+IF "%_KEY:~,1%" == "@" GOTO :EOF
+SET "%~1=%~2"
+GOTO :EOF
