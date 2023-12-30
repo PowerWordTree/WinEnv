@@ -12,4 +12,4 @@
 SETLOCAL
 SET "@PREFIX=%~1." & SET "@FMT=%~2"
 Powershell.EXE -Command "& { Get-Item Env:${Env:@PREFIX}@LIST -ErrorAction Ignore | ForEach-Object Value | ForEach-Object {$PSItem.Split(';',[StringSplitOptions]::RemoveEmptyEntries)} | ForEach-Object {$e=(Get-Item Env:${Env:@PREFIX}$PSItem -ErrorAction Ignore);IF ($e -eq $null) {New-Object System.Collections.DictionaryEntry($PSItem,'')} else {$e.name=$PSItem};$e} | ForEach-Object {${Env:@FMT} -f $PSItem.Name,$PSItem.Value}; Exit -Not $? }"
-ENDLOCAL EXIT /B %ERRORLEVEL%
+ENDLOCAL & EXIT /B %ERRORLEVEL%

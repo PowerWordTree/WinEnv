@@ -2,7 +2,7 @@
 
 批量添加 Windows 环境变量的工具.
 
-根据配置文件, 对 Windows 环境变量进行设置.
+根据配置文件, 对 Windows 环境变量进行设置, 当前工作目录为配置文件所在目录.
 
 ## 配置文件
 
@@ -42,17 +42,17 @@
 
   段名`REPLACE`, 段内定义多个键值. 键为环境变量名称, 值为环境变量内容. 值会替换环境变量, 可以使用`(Removed)`占位符表示删除环境变量.
 
-- 追加(APPEND)
-
-  段名`APPEND`, 段内定义多个键值. 键为环境变量名称, 值为环境变量内容. 值会追加到环境变量后.
-
 - 插入(INSERT)
 
   段名`INSERT`, 段内定义多个键值. 键为环境变量名称, 值为环境变量内容. 值会插入到环境变量前.
 
+- 追加(APPEND)
+
+  段名`APPEND`, 段内定义多个键值. 键为环境变量名称, 值为环境变量内容. 值会追加到环境变量后.
+
 - 变量和转义
 
-  配置文件中`%`包裹的变量, 在执行时会被展开, 当前工作目录为配置文件所在目录. 需要保留`%`时, 用`%%`方式进行转义.
+  配置文件中`%`包裹的变量, 在执行时会被展开. 需要保留`%`时, 用`%%`方式进行转义.
 
 ### 执行顺序
 
@@ -72,8 +72,8 @@ SCOPE=USER
 [REPLACE]
 JAVA_HOME=%CD%\JDK11
 
-[APPEND]
-PATH=;%%JAVA_HOME%%\Bin
+[INSERT]
+PATH=%%POWERSHELL_HOME%%;
 ```
 
 ```ini
@@ -82,8 +82,8 @@ SCOPE=MACHINE
 [REPLACE]
 POWERSHELL_HOME=%CD%\POWERSHELL7
 
-[INSERT]
-PATH=%%POWERSHELL_HOME%%;
+[APPEND]
+PATH=;%%JAVA_HOME%%\Bin
 ```
 
 ## 命令行:

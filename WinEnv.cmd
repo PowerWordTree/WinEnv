@@ -1,6 +1,6 @@
 ::环境变量管理
 ::@author FB
-::@version 0.3.1
+::@version 1.0.0
 
 ::Script:Argument.Parser.CMD::
 ::Script:Config.FileRead.CMD::
@@ -59,8 +59,8 @@ IF /I "%_ARG.OPTION.H%" == "TRUE" (
   ECHO.
   ECHO - /o ^| -o
   ECHO   指定要执行的操作.
-  ECHO   必选参数, `1`设置环境变量, `2`恢复环境变量, `3`退出.
-  ECHO   默认为等待用户选择.
+  ECHO   必选参数: `1`设置环境变量, `2`恢复环境变量, `3`退出.
+  ECHO   默认操作为等待用户选择.
   ECHO.
   ECHO - /h ^| -h
   ECHO   显示帮助
@@ -104,6 +104,7 @@ FOR %%A IN ("REPLACE","INSERT","APPEND") DO (
     ::::展开变量
     CALL SET "_KEY=%%~I"
     CALL Environment.Get.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" || SET "@=(Removed)"
+    ::::转义变量
     CALL String.Replace.CMD "%%@%%" "%%%%" "%%%%%%%%"
     CALL Map.Put.CMD "_CONFIG_OLD.REPLACE" "%%_KEY%%" "%%@%%"
   )
@@ -127,9 +128,8 @@ FOR /F "tokens=1,* usebackq delims==" %%A IN (
   CALL :SETENV "%%~A" "%%~B%%%%~A%%"
   CALL SET "_KEY=%%~A" & CALL SET "_VALUE=%%~B"
   CALL Environment.Get.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%"
-  CALL SET "_VALUE=%%_VALUE%%%%@%%"
-  CALL ECHO %%_KEY%%=%%_VALUE%%
-  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
+  CALL ECHO %%_KEY%%=%%_VALUE%%%%@%%
+  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%%%@%%"
 )
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
   `CALL Map.List.CMD "_CONFIG.APPEND" "{0}={1}"`
@@ -138,9 +138,8 @@ FOR /F "tokens=1,* usebackq delims==" %%A IN (
   CALL :SETENV "%%~A" "%%%%~A%%%%~B"
   CALL SET "_KEY=%%~A" & CALL SET "_VALUE=%%~B"
   CALL Environment.Get.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%"
-  CALL SET "_VALUE=%%@%%%%_VALUE%%"
-  CALL ECHO %%_KEY%%=%%_VALUE%%
-  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
+  CALL ECHO %%_KEY%%=%%@%%%%_VALUE%%
+  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%@%%%%_VALUE%%"
 )
 GOTO :EXIT
 
@@ -178,6 +177,7 @@ IF "%_OPTION%" == "" (
 )
 ENDLOCAL & EXIT /B %_EXIT_CODE%
 
+::设置变量
 :SETENV
 SET "_KEY=%~1"
 IF "%_KEY%" == "" GOTO :EOF
