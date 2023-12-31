@@ -1,7 +1,5 @@
 ::@author FB
-::@version 0.2.1
-
-::环境变量扩展在变量未定义时, 会造成未知结果
+::@version 0.1.0
 
 ::已知问题: 无法处理TAB符号
 
@@ -12,10 +10,10 @@
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 SET "@=%~1"
-:_TRIM_START
+:@STRING_TRIM_START_LOOP
 IF "%@%" == "" EXIT /B
 IF "%@:~,1%" == " " (
   SET "@=%@:~1%"
-  GOTO :_TRIM_START
+  GOTO :@STRING_TRIM_START_LOOP
 )
 EXIT /B

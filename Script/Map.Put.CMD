@@ -1,5 +1,5 @@
 ::@author FB
-::@version 0.2.0
+::@version 0.1.0
 
 ::加入
 ::  参数1: 实例名称
@@ -11,4 +11,4 @@
 SET "%~1.%~2=%~3"
 CALL ECHO.%%%~1.@LIST%% | FIND /I ";%~2;" 1>NUL 2>&1 ^
   || CALL SET "%~1.@LIST=%%%~1.@LIST%%%~2;"
-EXIT /B
+EXIT /B 0

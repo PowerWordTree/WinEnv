@@ -7,11 +7,11 @@
 ::Script:Config.FileWrite.CMD::
 ::Script:Environment.Get.CMD::
 ::Script:Environment.Set.CMD::
-::Script:File.GetPath.CMD::
 ::Script:Map.New.CMD::
 ::Script:Map.NewChild.CMD::
 ::Script:Map.List.CMD::
 ::Script:Map.Put.CMD::
+::Script:Path.GetPath.CMD::
 ::Script:String.Replace.CMD::
 
 ::初始化环境
@@ -40,7 +40,7 @@ IF "%_ARG.PARAM.0%" == "" (
   SET "_CONFIG=%_ARG.PARAM.0%.ini"
   SET "_CONFIG_OLD=%_ARG.PARAM.0%.old"
 )
-CALL File.GetPath.CMD "%%_CONFIG%%"
+CALL Path.GetPath.CMD "%%_CONFIG%%"
 CD /D "%@%"
 ::输出标题
 ECHO.

@@ -1,5 +1,5 @@
 ::@author FB
-::@version 0.2.0
+::@version 0.1.0
 
 ::数据组织: A.XX=* A.YY=* A.ZZ=*
 ::元素列表: A.@LIST A.B.@LIST A.C.@LIST

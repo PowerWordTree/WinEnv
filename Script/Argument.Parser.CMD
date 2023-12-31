@@ -1,5 +1,5 @@
 ::@author FB
-::@version 0.2.0
+::@version 0.1.0
 
 ::有序参数: 实例.PARAM, 保存为Array
 ::选项参数: 实例.OPTION, 保存为Map
@@ -22,7 +22,7 @@
 SET "@VAR=%~1"
 CALL Array.New.CMD "%@VAR%.PARAM"
 CALL Map.New.CMD "%@VAR%.OPTION"
-:_ARG_PARSE_LOOP
+:@ARGUMENT_PARSER_LOOP
 SHIFT
 IF "%1" == "" (SET "@VAR=" & EXIT /B)
 SET "@=%~1"
@@ -36,4 +36,4 @@ ECHO.%@% | FINDSTR "^[-/]" 1>NUL 2>&1 && (
 ) || (
   CALL Array.Push.CMD "%@VAR%.PARAM" "%%@%%"
 )
-GOTO :_ARG_PARSE_LOOP
+GOTO :@ARGUMENT_PARSER_LOOP

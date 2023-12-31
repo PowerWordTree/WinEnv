@@ -7,9 +7,8 @@
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-@ECHO OFF
 SETLOCAL
-SET "@STR=%~1"
+SET "@STR=%~1" & SET "@="
 FOR /F "usebackq delims=" %%A IN (
   `Powershell.EXE -Command "& { [Environment]::ExpandEnvironmentVariables(${Env:@STR}) }"`
 ) DO (
