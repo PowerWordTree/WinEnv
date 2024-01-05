@@ -1,12 +1,8 @@
 ::@author FB
-::@version 0.1.0
+::@version 0.1.1
 
 ::有序参数: 实例.PARAM, 保存为Array
 ::选项参数: 实例.OPTION, 保存为Map
-
-::脚本中`&&`和`||`结构存在风险
-::链式调用可能在某些情况下错误触发, 不能直接替代为`IF ELSE`结构
-::如: (true) && (false) || (???)
 
 ::解析参数
 ::  参数1: 实例名称
@@ -29,10 +25,12 @@ SET "@=%~1"
 ECHO.%@% | FINDSTR "^[-/]" 1>NUL 2>&1 && (
   ECHO.%~2 | FINDSTR /R /C:"^[-/]" /C:"^[ ]*$" 1>NUL 2>&1 && (
     CALL Map.Put.CMD "%@VAR%.OPTION" "%%@:~1%%" "TRUE"
+    VERIFY 1>NUL 2>&1
   ) || (
     CALL Map.Put.CMD "%@VAR%.OPTION" "%%@:~1%%" "%~2"
     SHIFT
   )
+  VERIFY 1>NUL 2>&1
 ) || (
   CALL Array.Push.CMD "%@VAR%.PARAM" "%%@%%"
 )

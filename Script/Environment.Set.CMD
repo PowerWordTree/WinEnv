@@ -5,7 +5,7 @@
 ::  参数1: 作用域(MACHINE/USER)
 ::  参数2: 环境变量名
 ::  参数3: 环境变量值(空为删除)
-::  错误码: 0,执行成功; 1,执行失败;
+::  退出码: 0,执行成功; 1,执行失败;
 
 ::Script:Common.Expand.CMD::
 ::Script:Registry.Add.CMD::
