@@ -1,8 +1,9 @@
 ::环境变量管理
 ::@author FB
-::@version 1.0.0
+::@version 1.0.1
 
 ::Script:Argument.Parser.CMD::
+::Script:Common.IsAdmin.CMD::
 ::Script:Config.FileRead.CMD::
 ::Script:Config.FileWrite.CMD::
 ::Script:Environment.Get.CMD::
@@ -87,11 +88,20 @@ ECHO.
 ECHO 配置文件: %_CONFIG%
 IF NOT EXIST "%_CONFIG%" (
   ECHO.
-  ECHO.***** 错误, 配置文件不存在！*****
+  ECHO.***** 错误, 配置文件不存在! *****
   SET "_EXIT_CODE=404"
   GOTO :EXIT
 )
 CALL Config.FileRead.CMD "_CONFIG" "%%_CONFIG%%"
+::检查管理员权限
+IF "%_CONFIG.SCOPE%" == "MACHINE" (
+  CALL Common.IsAdmin.CMD || (
+    ECHO.
+    ECHO.***** 错误, 需要管理员权限! *****
+    SET "_EXIT_CODE=401"
+    GOTO :EXIT
+  )
+)
 ::备份环境变量
 CALL Map.New.CMD "_CONFIG_OLD"
 ::::展开变量
@@ -154,6 +164,15 @@ IF NOT EXIST "%_CONFIG_OLD%" (
   GOTO :EXIT
 )
 CALL Config.FileRead.CMD "_CONFIG_OLD" "%%_CONFIG_OLD%%"
+::检查管理员权限
+IF "%_CONFIG_OLD.SCOPE%" == "MACHINE" (
+  CALL Common.IsAdmin.CMD || (
+    ECHO.
+    ECHO.***** 错误, 需要管理员权限! *****
+    SET "_EXIT_CODE=401"
+    GOTO :EXIT
+  )
+)
 ::恢复环境变量
 FOR /F "tokens=1,* usebackq delims==" %%A IN (
   `CALL Map.List.CMD "_CONFIG_OLD.REPLACE" "{0}={1}"`
