@@ -12,6 +12,7 @@
 ::Script:Map.NewChild.CMD::
 ::Script:Map.List.CMD::
 ::Script:Map.Put.CMD::
+::Script:Path.GetAbsolutePath.CMD::
 ::Script:Path.GetPath.CMD::
 ::Script:Process.Callback.CMD::
 ::Script:String.Replace.CMD::
@@ -42,6 +43,10 @@ IF "%_ARG.PARAM.0%" == "" (
   SET "_CONFIG=%_ARG.PARAM.0%.ini"
   SET "_CONFIG_OLD=%_ARG.PARAM.0%.old"
 )
+CALL Path.GetAbsolutePath.CMD "%%_CONFIG%%"
+SET "_CONFIG=%@%"
+CALL Path.GetAbsolutePath.CMD "%%_CONFIG_OLD%%"
+SET "_CONFIG_OLD=%@%"
 CALL Path.GetPath.CMD "%%_CONFIG%%"
 CD /D "%@%"
 ::Êä³ö±êÌâ
