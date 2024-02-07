@@ -1,6 +1,6 @@
 ::环境变量管理
 ::@author FB
-::@version 1.0.1
+::@version 1.0.2
 
 ::Script:Argument.Parser.CMD::
 ::Script:Common.IsAdmin.CMD::
@@ -13,6 +13,7 @@
 ::Script:Map.List.CMD::
 ::Script:Map.Put.CMD::
 ::Script:Path.GetPath.CMD::
+::Script:Process.Callback.CMD::
 ::Script:String.Replace.CMD::
 
 ::初始化环境
@@ -107,49 +108,50 @@ CALL Map.New.CMD "_CONFIG_OLD"
 ::::展开变量
 CALL Map.Put.CMD "_CONFIG_OLD" "SCOPE" "%_CONFIG.SCOPE%"
 CALL Map.NewChild.CMD "_CONFIG_OLD" "REPLACE"
-FOR %%A IN ("REPLACE","INSERT","APPEND") DO (
-  FOR /F "usebackq delims=" %%I IN (
-    `CALL Map.List.CMD "_CONFIG.%%~A" "{0}"`
-  ) DO (
-    ::::展开变量
-    CALL SET "_KEY=%%~I"
-    CALL Environment.Get.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" || SET "@=(Removed)"
-    ::::转义变量
-    CALL String.Replace.CMD "%%@%%" "%%%%" "%%%%%%%%"
-    CALL Map.Put.CMD "_CONFIG_OLD.REPLACE" "%%_KEY%%" "%%@%%"
-  )
+CALL Map.List.CMD "_CONFIG.REPLACE"
+SET "_ENV_LIST=%@%"
+CALL Map.List.CMD "_CONFIG.INSERT"
+SET "_ENV_LIST=%_ENV_LIST%%@%"
+CALL Map.List.CMD "_CONFIG.APPEND"
+SET "_ENV_LIST=%_ENV_LIST%%@%"
+FOR %%A IN (%_ENV_LIST%) DO (
+  ::::展开变量
+  CALL SET "_KEY=%%~A"
+  CALL Environment.Get.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" || SET "@=(Removed)"
+  ::::转义变量
+  CALL String.Replace.CMD "%%@%%" "%%%%" "%%%%%%%%"
+  CALL Map.Put.CMD "_CONFIG_OLD.REPLACE" "%%_KEY%%" "%%@%%"
 )
 CALL Config.FileWrite.CMD "_CONFIG_OLD" "%%_CONFIG_OLD%%"
 ::设置环境变量
-FOR /F "tokens=1,* usebackq delims==" %%A IN (
-  `CALL Map.List.CMD "_CONFIG.REPLACE" "{0}={1}"`
-) DO (
+CALL Map.List.CMD "_CONFIG.REPLACE"
+FOR %%A IN (%@%) DO (
   ::::展开变量
-  CALL :SETENV "%%~A" "%%~B"
-  CALL SET "_KEY=%%~A" & CALL SET "_VALUE=%%~B"
+  CALL SET "_KEY=%%~A" & CALL CALL SET "_VALUE=%%_CONFIG.REPLACE.%%~A%%"
   CALL ECHO %%_KEY%%=%%_VALUE%%
-  IF /I "%%~B" == "(Removed)" SET "_VALUE="
+  CALL Process.Callback.CMD IF /I "%%_VALUE%%" == "(Removed)" SET "_VALUE="
+  CALL :SETENV "%%_KEY%%" "%%_VALUE%%"
   CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
 )
-FOR /F "tokens=1,* usebackq delims==" %%A IN (
-  `CALL Map.List.CMD "_CONFIG.INSERT" "{0}={1}"`
-) DO (
+CALL Map.List.CMD "_CONFIG.INSERT"
+FOR %%A IN (%@%) DO (
   ::::展开变量
-  CALL :SETENV "%%~A" "%%~B%%%%~A%%"
-  CALL SET "_KEY=%%~A" & CALL SET "_VALUE=%%~B"
+  CALL SET "_KEY=%%~A" & CALL CALL SET "_VALUE=%%_CONFIG.INSERT.%%~A%%"
   CALL Environment.Get.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%"
-  CALL ECHO %%_KEY%%=%%_VALUE%%%%@%%
-  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%%%@%%"
+  CALL SET "_VALUE=%%_VALUE%%%%@%%"
+  CALL ECHO %%_KEY%%=%%_VALUE%%
+  CALL :SETENV "%%_KEY%%" "%%_VALUE%%"
+  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
 )
-FOR /F "tokens=1,* usebackq delims==" %%A IN (
-  `CALL Map.List.CMD "_CONFIG.APPEND" "{0}={1}"`
-) DO (
+CALL Map.List.CMD "_CONFIG.APPEND"
+FOR %%A IN (%@%) DO (
   ::::展开变量
-  CALL :SETENV "%%~A" "%%%%~A%%%%~B"
-  CALL SET "_KEY=%%~A" & CALL SET "_VALUE=%%~B"
+  CALL SET "_KEY=%%~A" & CALL CALL SET "_VALUE=%%_CONFIG.APPEND.%%~A%%"
   CALL Environment.Get.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%"
-  CALL ECHO %%_KEY%%=%%@%%%%_VALUE%%
-  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%@%%%%_VALUE%%"
+  CALL SET "_VALUE=%%@%%%%_VALUE%%"
+  CALL ECHO %%_KEY%%=%%_VALUE%%
+  CALL :SETENV "%%_KEY%%" "%%_VALUE%%"
+  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
 )
 GOTO :EXIT
 
@@ -174,14 +176,13 @@ IF "%_CONFIG_OLD.SCOPE%" == "MACHINE" (
   )
 )
 ::恢复环境变量
-FOR /F "tokens=1,* usebackq delims==" %%A IN (
-  `CALL Map.List.CMD "_CONFIG_OLD.REPLACE" "{0}={1}"`
-) DO (
-  ::展开变量
-  CALL :SETENV "%%~A" "%%~B"
-  CALL SET "_KEY=%%~A" & CALL SET "_VALUE=%%~B"
+CALL Map.List.CMD "_CONFIG_OLD.REPLACE"
+FOR %%A IN (%@%) DO (
+  ::::展开变量
+  CALL SET "_KEY=%%~A" & CALL CALL SET "_VALUE=%%_CONFIG_OLD.REPLACE.%%~A%%"
   CALL ECHO %%_KEY%%=%%_VALUE%%
-  IF /I "%%~B" == "(Removed)" SET "_VALUE="
+  CALL Process.Callback.CMD IF /I "%%_VALUE%%" == "(Removed)" SET "_VALUE="
+  CALL :SETENV "%%_KEY%%" "%%_VALUE%%"
   CALL Environment.Set.CMD "%%_CONFIG_OLD.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
 )
 GOTO :EXIT
