@@ -34,8 +34,8 @@ IF "%_ARG.OPTION.O%" == "1" (
   SET "_OPTION="
 )
 IF "%_ARG.PARAM.0%" == "" (
-  SET "_CONFIG=%~n0.ini"
-  SET "_CONFIG_OLD=%~n0.old"
+  SET "_CONFIG=%~dpn0.ini"
+  SET "_CONFIG_OLD=%~dpn0.old"
 ) ELSE IF /I "%_ARG.PARAM.0:~-4%" == ".ini" (
   SET "_CONFIG=%_ARG.PARAM.0%"
   SET "_CONFIG_OLD=%_ARG.PARAM.0:~,-4%.old"

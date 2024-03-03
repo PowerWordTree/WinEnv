@@ -6,7 +6,7 @@
 
 ## 配置文件
 
-配置文件为非标准 INI 格式, 使用ANSI编码.
+配置文件为非标准 INI 格式, 使用 ANSI 编码.
 
 默认配置文件名与脚本同名但扩展名不同, 配置文件扩展名`.ini`, 备份文件扩展名`.old`.
 
@@ -105,9 +105,9 @@ PATH=;%%JAVA_HOME%%\Bin
 ### 示例
 
 ```bat
-Env.cmd
-Env.cmd XXX
-Env.cmd XXX.ini
-Env.cmd XXX /o 1
-Env.cmd XXX.ini /o 2
+WinEnv.cmd
+WinEnv.cmd XXX
+WinEnv.cmd XXX.ini
+WinEnv.cmd XXX /o 1
+WinEnv.cmd XXX.ini /o 2
 ```
