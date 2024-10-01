@@ -88,7 +88,7 @@ PATH=;%%JAVA_HOME%%\Bin
 
 ## 命令行:
 
-命令行: WinEnv.cmd [配置文件[.ini]] [/o|-o <1|2|3>] [/h|-h]
+命令行: WinEnv.cmd [配置文件[.ini]] [/o|-o <1|2|3>] [/NoWait|-NoWait] [/NoLogo|-NoLogo] [/NoAnsi|-NoAnsi] [/h|-h]
 
 - 配置文件
 
@@ -97,6 +97,18 @@ PATH=;%%JAVA_HOME%%\Bin
 - `/o` | `-o`
 
   指定要执行的操作. 必选参数, `1`设置环境变量, `2`恢复环境变量, `3`退出. 默认为等待用户选择.
+
+- `/NoWait` | `-NoWait`
+
+  执行结束时无等待.
+
+- `/NoLogo` | `-NoLogo`
+
+  执行前不显示 Logo.
+
+- `/NoAnsi` | `-NoAnsi`
+
+  禁用转义序列显示.
 
 - `/h` | `-h`
 
