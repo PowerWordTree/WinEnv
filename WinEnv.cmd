@@ -278,7 +278,7 @@ FOR %%A IN (%@%) DO (
   CALL SET "_KEY=%%~A" & CALL CALL SET "_VALUE=%%_CONFIG.REPLACE.%%~A%%"
   CALL ECHO %%_KEY%%=%%_VALUE%%
   CALL Process.Callback.CMD IF /I "%%_VALUE%%" == "(Removed)" SET "_VALUE="
-  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
+  CALL :SETENV
 )
 CALL Map.List.CMD "_CONFIG.INSERT"
 FOR %%A IN (%@%) DO (
@@ -287,7 +287,7 @@ FOR %%A IN (%@%) DO (
   CALL Environment.Get.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%"
   CALL SET "_VALUE=%%_VALUE%%%%@%%"
   CALL ECHO %%_KEY%%=%%_VALUE%%
-  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
+  CALL :SETENV
 )
 CALL Map.List.CMD "_CONFIG.APPEND"
 FOR %%A IN (%@%) DO (
@@ -296,8 +296,26 @@ FOR %%A IN (%@%) DO (
   CALL Environment.Get.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%"
   CALL SET "_VALUE=%%@%%%%_VALUE%%"
   CALL ECHO %%_KEY%%=%%_VALUE%%
-  CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
+  CALL :SETENV
 )
+GOTO :EOF
+
+::临时设置变量
+::@Variables
+::  *@, _CONFIG, _KEY, _VALUE
+::@Arguments
+::  %_CONFIG%: 配置实例
+::  %_KEY%: 键
+::  %_VALUE%: 值
+::@Outputs
+::  %%_KEY%%: 符合条件时, %_KEY%为键, %_VALUE%为值, 设置变量.
+:SETENV
+CALL Environment.Set.CMD "%%_CONFIG.SCOPE%%" "%%_KEY%%" "%%_VALUE%%"
+IF "%_KEY%" == "" GOTO :EOF
+IF /I "%_KEY%" == "PATH" GOTO :EOF
+IF "%_KEY:~,1%" == "_" GOTO :EOF
+IF "%_KEY:~,1%" == "@" GOTO :EOF
+SET "%_KEY%=%_VALUE%"
 GOTO :EOF
 
 ::输出高亮文本
